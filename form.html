@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISIO 360° - Değerlendirme Formu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #3b82f6; --primary-dark: #1d4ed8; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --bg: #0f172a;
+            --bg-card: #1e293b; --bg-hover: #334155; --text: #f1f5f9;
+            --text-light: #94a3b8; --border: #334155;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 24px; text-align: center; }
+        .header h1 { font-size: 24px; margin-bottom: 4px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 24px; }
+        
+        .info-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: center; }
+        .info-card .evaluatee { font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .info-card .period { color: var(--text-light); }
+        .info-card .evaluator { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; color: var(--text-light); }
+        
+        .instructions { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 16px; margin-bottom: 24px; font-size: 14px; }
+        .instructions h4 { color: var(--primary); margin-bottom: 8px; }
+        .instructions ul { padding-left: 20px; color: var(--text-light); }
+        .instructions li { margin-bottom: 4px; }
+        
+        .category { margin-bottom: 32px; }
+        .category-header { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px 12px 0 0; padding: 16px 20px; }
+        .category-title { font-size: 16px; font-weight: 600; }
+        .category-code { font-size: 12px; color: var(--primary); margin-top: 4px; }
+        
+        .question { background: var(--bg-card); border: 1px solid var(--border); border-top: none; padding: 20px; }
+        .question:last-child { border-radius: 0 0 12px 12px; }
+        .question-text { font-size: 15px; margin-bottom: 16px; }
+        .question-num { color: var(--primary); font-weight: 600; }
+        
+        .options { display: grid; gap: 8px; }
+        .option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-hover); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .option:hover { background: var(--border); }
+        .option.selected { background: rgba(59, 130, 246, 0.15); border-color: var(--primary); }
+        .option input { display: none; }
+        .option-radio { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .option.selected .option-radio { border-color: var(--primary); background: var(--primary); }
+        .option.selected .option-radio::after { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; }
+        .option-text { flex: 1; font-size: 14px; }
+        .option-score { font-size: 11px; color: var(--text-light); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
+        
+        .footer { position: sticky; bottom: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; border-radius: 12px; }
+        .progress { display: flex; align-items: center; gap: 12px; }
+        .progress-bar { width: 200px; height: 8px; background: var(--bg-hover); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success); transition: width 0.3s; }
+        .progress-text { font-size: 14px; color: var(--text-light); }
+        
+        .btn { padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--success); padding: 14px 20px; border-radius: 12px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 1000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-color: var(--danger); }
+        
+        .error-page, .success-page, .loading-page { text-align: center; padding: 80px 20px; }
+        .error-page .icon, .success-page .icon, .loading-page .icon { font-size: 80px; margin-bottom: 24px; }
+        .error-page h2, .success-page h2, .loading-page h2 { margin-bottom: 12px; }
+        .error-page p, .success-page p, .loading-page p { color: var(--text-light); }
+        
+        .already-done { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+        
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            .option { padding: 10px 12px; }
+            .option-text { font-size: 13px; }
+            .footer { flex-direction: column; gap: 16px; }
+            .progress-bar { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📊 VISIO 360°</h1>
+        <p>Performans Değerlendirme Formu</p>
+    </header>
+    
+    <div class="container">
+        <div id="content">
+            <div class="loading-page">
+                <div class="icon">⏳</div>
+                <h2>Yükleniyor...</h2>
+                <p>Lütfen bekleyin</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    var db = null;
+    var assignmentData = null;
+    var questions = [];
+    var answers = {};
+    
+    // REEL Kategorileri ve Sorular
+    var CATEGORIES = [
+        { code: 'PIEE', name: 'Proaktiflik, İnisiyatif, Enerji, Etkinlik', questions: [
+            'Görevlerini zamanında ve eksiksiz tamamlar.',
+            'Yeni fikirler üretir ve uygular.',
+            'Sorunları çözmek için inisiyatif alır.',
+            'Yüksek enerji ve motivasyonla çalışır.',
+            'Hedeflerine ulaşmak için kararlılık gösterir.'
+        ]},
+        { code: 'OI', name: 'Organizasyon ve İşbirliği', questions: [
+            'Ekip çalışmasına katkıda bulunur.',
+            'İş süreçlerini etkin organize eder.',
+            'Diğer birimlerle uyumlu çalışır.',
+            'Kaynakları verimli kullanır.'
+        ]},
+        { code: 'EZC', name: 'Etkili Zaman ve Çatışma Yönetimi', questions: [
+            'Zamanını etkili kullanır.',
+            'Öncelikleri doğru belirler.',
+            'Çatışmaları yapıcı şekilde çözer.',
+            'Stres altında sakin kalır.'
+        ]},
+        { code: 'EOL', name: 'Etkili ve Olumlu Liderlik', questions: [
+            'Ekibine ilham verir.',
+            'Adil ve tutarlı davranır.',
+            'Geri bildirim verir ve alır.',
+            'Başkalarını geliştirir.'
+        ]},
+        { code: 'EDI', name: 'Etkili ve Doğru İletişim', questions: [
+            'Düşüncelerini açık ifade eder.',
+            'Aktif dinleme yapar.',
+            'Yazılı iletişimde etkilidir.'
+        ]},
+        { code: 'KGPB', name: 'Kurumsal Gelişime Pozitif Bakış', questions: [
+            'Kurumsal değerlere bağlıdır.',
+            'Değişime açıktır.',
+            'Kurumun başarısı için çalışır.',
+            'Olumlu tutum sergiler.'
+        ]},
+        { code: 'EAED', name: 'Eğitim ve Araştırma Etkinliği', questions: [
+            'Sürekli öğrenmeye açıktır.',
+            'Bilgisini paylaşır.',
+            'Yeni teknolojileri takip eder.',
+            'Araştırma ve analiz yapar.'
+        ]},
+        { code: 'SYBD', name: 'Stratejik Yönetsel Beceriler', questions: [
+            'Stratejik düşünür.',
+            'Karar alma süreçlerinde etkilidir.',
+            'Riskleri yönetir.',
+            'Uzun vadeli planlar yapar.'
+        ]},
+        { code: 'MSUY', name: 'Mesleki Saygınlık ve Uzmanlık', questions: [
+            'Alanında uzmandır.',
+            'Mesleki etik kurallara uyar.',
+            'Güvenilirdir.',
+            'Kaliteli iş üretir.'
+        ]},
+        { code: 'KGMO', name: 'Kurumsal Gelişim Motivasyonu', questions: [
+            'Kurumsal hedeflere katkı sağlar.',
+            'Yenilikçi projeler önerir.',
+            'Sürekli iyileştirme arar.'
+        ]}
+    ];
+    
+    // Cevap seçenekleri
+    var OPTIONS = [
+        { text: 'Çok düşük düzeyde', reel: 1 },
+        { text: 'Düşük düzeyde', reel: 2 },
+        { text: 'Ortalamanın altında', reel: 3 },
+        { text: 'Orta düzeyde', reel: 4 },
+        { text: 'Ortalamanın üstünde', reel: 5 },
+        { text: 'Yüksek düzeyde', reel: 6 },
+        { text: 'Çok yüksek düzeyde', reel: 7 },
+        { text: 'Değerlendirme yapamıyorum', reel: 0 }
+    ];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // URL'den token al
+        var params = new URLSearchParams(window.location.search);
+        var token = params.get('token');
+        
+        if (!token) {
+            showError('Geçersiz Link', 'Bu değerlendirme linki geçersiz veya eksik.');
+            return;
+        }
+        
+        // Supabase bağlantısı - localStorage'dan al
+        var url = localStorage.getItem('visio360_supabase_url');
+        var key = localStorage.getItem('visio360_supabase_key');
+        
+        if (!url || !key) {
+            // URL'den config parametreleri al (admin tarafından eklenir)
+            url = params.get('sb_url');
+            key = params.get('sb_key');
+            
+            if (url && key) {
+                localStorage.setItem('visio360_supabase_url', url);
+                localStorage.setItem('visio360_supabase_key', key);
+            }
+        }
+        
+        if (!url || !key) {
+            showError('Yapılandırma Hatası', 'Sistem yapılandırması eksik. Lütfen yöneticinize başvurun.');
+            return;
+        }
+        
+        db = window.supabase.createClient(url, key);
+        
+        // Soruları hazırla
+        var qNum = 1;
+        CATEGORIES.forEach(function(cat) {
+            cat.questions.forEach(function(q) {
+                questions.push({ num: qNum++, category: cat.code, categoryName: cat.name, text: q });
+            });
+        });
+        
+        loadAssignment(token);
+    });
+    
+    async function loadAssignment(token) {
+        try {
+            var { data, error } = await db.from('evaluation_assignments')
+                .select('*, evaluator:evaluator_id(name), target:target_id(name), evaluation_periods(name)')
+                .eq('token', token)
+                .single();
+            
+            if (error || !data) {
+                showError('Link Bulunamadı', 'Bu değerlendirme linki geçersiz veya süresi dolmuş.');
+                return;
+            }
+            
+            if (data.status === 'completed') {
+                showAlreadyDone(data);
+                return;
+            }
+            
+            assignmentData = data;
+            renderForm();
+            
+        } catch(e) {
+            showError('Bağlantı Hatası', 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.');
+        }
+    }
+    
+    function showError(title, message) {
+        document.getElementById('content').innerHTML = 
+            '<div class="error-page"><div class="icon">❌</div><h2>' + title + '</h2><p>' + message + '</p></div>';
+    }
+    
+    function showAlreadyDone(data) {
+        document.getElementById('content').innerHTML = 
+            '<div class="success-page already-done"><div class="icon">✅</div>' +
+            '<h2>Değerlendirme Tamamlandı</h2>' +
+            '<p>Bu değerlendirme daha önce tamamlanmış.<br><br>' +
+            '<strong>' + (data.evaluatee ? data.evaluatee.name : '') + '</strong> için değerlendirmeniz kaydedildi.<br>' +
+            'Katılımınız için teşekkür ederiz.</p></div>';
+    }
+    
+    function showSuccess() {
+        document.getElementById('content').innerHTML = 
+            '<div class="success-page"><div class="icon">🎉</div>' +
+            '<h2>Teşekkürler!</h2>' +
+            '<p>Değerlendirmeniz başarıyla kaydedildi.<br><br>' +
+            'Bu sayfayı kapatabilirsiniz.</p></div>';
+    }
+    
+    function renderForm() {
+        var html = '';
+        
+        // Bilgi kartı
+        html += '<div class="info-card">';
+        html += '<div class="evaluatee">' + (assignmentData.evaluatee ? assignmentData.evaluatee.name : 'Bilinmiyor') + '</div>';
+        html += '<div class="period">' + (assignmentData.evaluation_periods ? assignmentData.evaluation_periods.name : '') + '</div>';
+        html += '<div class="evaluator">Değerlendiren: <strong>' + (assignmentData.evaluator ? assignmentData.evaluator.name : 'Anonim') + '</strong></div>';
+        html += '</div>';
+        
+        // Talimatlar
+        html += '<div class="instructions">';
+        html += '<h4>📋 Değerlendirme Talimatları</h4>';
+        html += '<ul>';
+        html += '<li>Lütfen tüm soruları dikkatlice okuyun</li>';
+        html += '<li>Her soru için en uygun seçeneği işaretleyin</li>';
+        html += '<li>Değerlendirme yapamadığınız sorularda "Değerlendirme yapamıyorum" seçin</li>';
+        html += '<li>Tüm cevaplarınız gizli tutulacaktır</li>';
+        html += '</ul></div>';
+        
+        // Sorular
+        var currentCat = '';
+        questions.forEach(function(q, idx) {
+            if (q.categoryName !== currentCat) {
+                if (currentCat) html += '</div>'; // Önceki kategoriyi kapat
+                html += '<div class="category">';
+                html += '<div class="category-header"><div class="category-title">' + q.categoryName + '</div>';
+                html += '<div class="category-code">' + q.category + '</div></div>';
+                currentCat = q.categoryName;
+            }
+            
+            html += '<div class="question" id="q' + q.num + '">';
+            html += '<div class="question-text"><span class="question-num">' + q.num + '.</span> ' + q.text + '</div>';
+            html += '<div class="options">';
+            
+            OPTIONS.forEach(function(opt, i) {
+                html += '<div class="option" onclick="selectOption(' + q.num + ', ' + i + ')">';
+                html += '<span class="option-radio"></span>';
+                html += '<span class="option-text">' + opt.text + '</span>';
+                if (opt.reel > 0) html += '<span class="option-score">' + opt.reel + '/7</span>';
+                html += '</div>';
+            });
+            
+            html += '</div></div>';
+        });
+        html += '</div>'; // Son kategoriyi kapat
+        
+        // Footer
+        html += '<div class="footer">';
+        html += '<div class="progress">';
+        html += '<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>';
+        html += '<span class="progress-text"><span id="answered">0</span>/' + questions.length + '</span>';
+        html += '</div>';
+        html += '<button class="btn btn-success" id="submitBtn" onclick="submitForm()">Değerlendirmeyi Gönder</button>';
+        html += '</div>';
+        
+        document.getElementById('content').innerHTML = html;
+    }
+    
+    function selectOption(qNum, optIndex) {
+        answers[qNum] = optIndex;
+        
+        // UI güncelle
+        var qEl = document.getElementById('q' + qNum);
+        var options = qEl.querySelectorAll('.option');
+        options.forEach(function(o, i) {
+            o.classList.remove('selected');
+            if (i === optIndex) o.classList.add('selected');
+        });
+        
+        updateProgress();
+    }
+    
+    function updateProgress() {
+        var count = Object.keys(answers).length;
+        var pct = Math.round((count / questions.length) * 100);
+        document.getElementById('answered').textContent = count;
+        document.getElementById('progressFill').style.width = pct + '%';
+    }
+    
+    async function submitForm() {
+        var count = Object.keys(answers).length;
+        
+        if (count < questions.length) {
+            var remaining = questions.length - count;
+            if (!confirm(remaining + ' soru henüz cevaplanmadı.\n\nYine de göndermek istiyor musunuz?')) {
+                return;
+            }
+        }
+        
+        var btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Gönderiliyor...';
+        
+        try {
+            // Cevapları kaydet
+            var responses = [];
+            questions.forEach(function(q) {
+                var optIndex = answers[q.num];
+                if (optIndex !== undefined) {
+                    var opt = OPTIONS[optIndex];
+                    responses.push({
+                        assignment_id: assignmentData.id,
+                        question_number: q.num,
+                        category_code: q.category,
+                        selected_option: optIndex,
+                        reel_score: opt.reel
+                    });
+                }
+            });
+            
+            if (responses.length > 0) {
+                var { error: respError } = await db.from('evaluation_responses').insert(responses);
+                if (respError) console.log('Response insert error:', respError);
+            }
+            
+            // Assignment'ı tamamlandı olarak işaretle
+            var { error: assignError } = await db.from('evaluation_assignments')
+                .update({ status: 'completed', completed_at: new Date().toISOString() })
+                .eq('id', assignmentData.id);
+            
+            if (assignError) throw assignError;
+            
+            showSuccess();
+            
+        } catch(e) {
+            toast('Hata: ' + e.message, true);
+            btn.disabled = false;
+            btn.textContent = 'Değerlendirmeyi Gönder';
+        }
+    }
+    
+    function toast(msg, isError) {
+        var el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast show' + (isError ? ' error' : '');
+        setTimeout(function() { el.className = 'toast'; }, 4000);
+    }
+    </script>
+</body>
+</html>

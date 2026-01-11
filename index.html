@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISIO 360° - Giriş</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+        }
+        .logo-section { text-align: center; margin-bottom: 40px; }
+        .logo-icon {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; font-size: 40px;
+        }
+        .logo-text h1 { font-size: 28px; color: #0f172a; margin-bottom: 4px; }
+        .logo-text p { font-size: 14px; color: #64748b; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        .form-input {
+            width: 100%; padding: 16px;
+            border: 2px solid #e5e7eb; border-radius: 12px;
+            font-size: 16px; font-family: inherit; background: #f9fafb;
+        }
+        .form-input:focus { outline: none; border-color: #3b82f6; background: white; }
+        .btn-login {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        .btn-login:hover { opacity: 0.9; }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .message-box {
+            padding: 12px 16px; border-radius: 10px;
+            margin-bottom: 20px; display: none; font-size: 14px;
+        }
+        .message-box.error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .message-box.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+        .message-box.show { display: block; }
+        .demo-info {
+            background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+            padding: 16px; border-radius: 10px; margin-top: 20px; font-size: 13px;
+        }
+        .demo-info strong { display: block; margin-bottom: 8px; font-size: 14px; }
+        .demo-info .demo-row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .demo-info .demo-label { color: #64748b; }
+        .mode-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; margin-top: 12px;
+        }
+        .mode-badge.demo { background: #fef3c7; color: #92400e; }
+        .mode-badge.cloud { background: #d1fae5; color: #065f46; }
+        .security-note {
+            background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;
+            padding: 12px 16px; border-radius: 10px; margin-top: 16px; font-size: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-section">
+            <div class="logo-icon">📊</div>
+            <div class="logo-text">
+                <h1>VISIO 360°</h1>
+                <p>Performans Değerlendirme Sistemi</p>
+                <span class="mode-badge" id="modeBadge">Demo Mod</span>
+            </div>
+        </div>
+        
+        <div class="message-box error" id="errorBox"></div>
+        <div class="message-box success" id="successBox"></div>
+        
+        <form id="loginForm" autocomplete="off">
+            <div class="form-group">
+                <label>👤 Kullanıcı Adı</label>
+                <input type="text" class="form-input" id="usernameInput" placeholder="Ad Soyad" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>🔐 Şifre</label>
+                <input type="password" class="form-input" id="passInput" placeholder="••••••••••" autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn-login" id="loginBtn">Giriş Yap</button>
+        </form>
+        
+        <div class="demo-info">
+            <strong>🔑 Demo Giriş Bilgileri</strong>
+            <div class="demo-row">
+                <span class="demo-label">Kullanıcı Adı:</span>
+                <span><strong>Süper Admin</strong></span>
+            </div>
+            <div class="demo-row">
+                <span class="demo-label">Şifre:</span>
+                <span><strong>99999999999</strong></span>
+            </div>
+        </div>
+        
+        <div class="security-note">
+            🔒 TC Kimlik numaranız şifre olarak kullanılır ve ekranda görünmez.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    // ========== CONFIG ==========
+    var CONFIG = {
+        USERS_KEY: 'visio360_users_db',
+        ORGS_KEY: 'visio360_orgs_db',
+        SESSION_KEY: 'visio360_user',
+        SUPABASE_URL_KEY: 'visio360_supabase_url',
+        SUPABASE_KEY_KEY: 'visio360_supabase_key'
+    };
+    
+    var db = null;
+    
+    // ========== INIT ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            // Eski verileri temizle (format değişti)
+            cleanOldData();
+            
+            initSupabase();
+            initLocalData();
+            checkSession();
+            
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                doLogin();
+            });
+        } catch(err) {
+            console.error('Başlatma hatası:', err);
+            // Hata varsa localStorage temizle
+            localStorage.clear();
+            alert('Sistem sıfırlandı. Sayfa yenilenecek.');
+            location.reload();
+        }
+    });
+    
+    function cleanOldData() {
+        // Eski format kontrolü - username yoksa eski veri
+        var users = localStorage.getItem(CONFIG.USERS_KEY);
+        if (users) {
+            try {
+                var parsed = JSON.parse(users);
+                if (parsed.length > 0 && !parsed[0].username) {
+                    // Eski format, sil
+                    localStorage.removeItem(CONFIG.USERS_KEY);
+                    localStorage.removeItem(CONFIG.SESSION_KEY);
+                }
+            } catch(e) {
+                localStorage.removeItem(CONFIG.USERS_KEY);
+            }
+        }
+    }
+    
+    function initSupabase() {
+        var url = localStorage.getItem(CONFIG.SUPABASE_URL_KEY);
+        var key = localStorage.getItem(CONFIG.SUPABASE_KEY_KEY);
+        if (url && key && window.supabase) {
+            db = window.supabase.createClient(url, key);
+            document.getElementById('modeBadge').textContent = '☁️ Bulut';
+            document.getElementById('modeBadge').className = 'mode-badge cloud';
+        }
+    }
+    
+    function initLocalData() {
+        if (!localStorage.getItem(CONFIG.USERS_KEY)) {
+            // Varsayılan admin: Kullanıcı adı = "Süper Admin", Şifre = TC numarası
+            var defaultUsers = [{
+                id: '1',
+                username: 'Süper Admin',  // Kullanıcı adı (Ad Soyad)
+                tc_no: '99999999999',      // Şifre olarak kullanılacak
+                role: 'super_admin',
+                org_id: null,
+                org_name: null,
+                status: 'active'
+            }];
+            localStorage.setItem(CONFIG.USERS_KEY, JSON.stringify(defaultUsers));
+        }
+        
+        if (!localStorage.getItem(CONFIG.ORGS_KEY)) {
+            localStorage.setItem(CONFIG.ORGS_KEY, JSON.stringify([
+                { id: '1', name: 'VISIO Academy', code: 'VISIO', status: 'active' }
+            ]));
+        }
+    }
+    
+    function checkSession() {
+        var session = localStorage.getItem(CONFIG.SESSION_KEY);
+        if (session) {
+            var user = JSON.parse(session);
+            redirectByRole(user.role);
+        }
+    }
+    
+    // ========== LOGIN ==========
+    async function doLogin() {
+        var username = document.getElementById('usernameInput').value.trim();
+        var password = document.getElementById('passInput').value.trim();
+        var btn = document.getElementById('loginBtn');
+        
+        hideMessages();
+        
+        // Validasyon
+        if (!username) {
+            showError('Kullanıcı adı girin');
+            return;
+        }
+        if (!password || password.length < 11) {
+            showError('Geçerli bir şifre girin');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.textContent = 'Giriş yapılıyor...';
+        
+        try {
+            var user = null;
+            
+            // Supabase varsa önce orada dene
+            if (db) {
+                user = await verifyFromSupabase(username, password);
+            }
+            
+            // Supabase'de bulunamadıysa local'de dene
+            if (!user) {
+                user = verifyFromLocal(username, password);
+            }
+            
+            if (!user) {
+                showError('Kullanıcı adı veya şifre hatalı!');
+                return;
+            }
+            
+            // Oturum kaydet
+            localStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify({
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                org_id: user.org_id,
+                org_name: user.org_name
+            }));
+            
+            showSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
+            
+            setTimeout(function() {
+                redirectByRole(user.role);
+            }, 1000);
+            
+        } catch (err) {
+            console.error('Giriş hatası:', err);
+            showError('Bir hata oluştu. Tekrar deneyin.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Giriş Yap';
+        }
+    }
+    
+    // Supabase'den doğrula (username = name, password = tc_no)
+    async function verifyFromSupabase(username, password) {
+        try {
+            var { data, error } = await db
+                .from('users')
+                .select('id, name, tc_no, role, organization_id, organizations(name)')
+                .eq('name', username)
+                .eq('tc_no', password)
+                .eq('status', 'active')
+                .single();
+            
+            if (error || !data) return null;
+            
+            return {
+                id: data.id,
+                username: data.name,
+                role: data.role,
+                org_id: data.organization_id,
+                org_name: data.organizations ? data.organizations.name : null
+            };
+        } catch (e) {
+            console.log('Supabase doğrulama hatası:', e);
+            return null;
+        }
+    }
+    
+    // Local'den doğrula
+    function verifyFromLocal(username, password) {
+        var users = JSON.parse(localStorage.getItem(CONFIG.USERS_KEY) || '[]');
+        
+        // Kullanıcı adı (username) ve şifre (tc_no) ile eşleştir
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            if (u.username === username && u.tc_no === password && u.status === 'active') {
+                return u;
+            }
+        }
+        return null;
+    }
+    
+    // ========== HELPERS ==========
+    function redirectByRole(role) {
+        switch(role) {
+            case 'super_admin': window.location.href = 'super-admin.html'; break;
+            case 'org_admin': window.location.href = 'org-admin.html'; break;
+            default: window.location.href = 'user-panel.html';
+        }
+    }
+    
+    function showError(msg) {
+        document.getElementById('errorBox').textContent = msg;
+        document.getElementById('errorBox').classList.add('show');
+    }
+    
+    function showSuccess(msg) {
+        document.getElementById('successBox').textContent = msg;
+        document.getElementById('successBox').classList.add('show');
+    }
+    
+    function hideMessages() {
+        document.getElementById('errorBox').classList.remove('show');
+        document.getElementById('successBox').classList.remove('show');
+    }
+    </script>
+</body>
+</html>

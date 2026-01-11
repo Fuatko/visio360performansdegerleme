@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISIO 360° - Kurum Yöneticisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #10b981; --primary-dark: #059669; --bg: #0f172a;
+            --bg-card: #1e293b; --bg-hover: #334155; --text: #f1f5f9;
+            --text-light: #94a3b8; --border: #334155; --danger: #ef4444;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .app { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .logo h1 { font-size: 18px; }
+        .logo span { font-size: 11px; color: var(--primary); }
+        .sidebar-menu { flex: 1; padding: 16px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; cursor: pointer; color: var(--text-light); margin-bottom: 4px; }
+        .menu-item:hover { background: var(--bg-hover); color: var(--text); }
+        .menu-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+        .user-box { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-hover); border-radius: 12px; }
+        .user-avatar { width: 40px; height: 40px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: var(--primary); }
+        .btn-logout { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 18px; }
+        .main { flex: 1; margin-left: 260px; padding: 24px; }
+        .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .page-desc { color: var(--text-light); margin-bottom: 24px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+        .stat-value { font-size: 32px; font-weight: 700; }
+        .stat-label { color: var(--text-light); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+        .card-body { padding: 24px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-light); font-size: 12px; text-transform: uppercase; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        .badge.green { background: rgba(16,185,129,0.2); color: #34d399; }
+        .badge.orange { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .badge.blue { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--primary); padding: 14px 20px; border-radius: 12px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 1000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">🏢</div>
+                    <div><h1>VISIO 360°</h1><span>KURUM YÖNETİCİSİ</span></div>
+                </div>
+            </div>
+            <nav class="sidebar-menu">
+                <div class="menu-item active" data-page="dashboard">📊 Dashboard</div>
+                <div class="menu-item" data-page="users">👥 Personel</div>
+                <div class="menu-item" data-page="evaluations">📋 Değerlendirmeler</div>
+                <div class="menu-item" data-page="reports">📈 Raporlar</div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-box">
+                    <div class="user-avatar" id="avatarEl">?</div>
+                    <div class="user-info"><div class="user-name" id="nameEl">-</div><div class="user-role" id="orgEl">-</div></div>
+                    <button class="btn-logout" onclick="doLogout()">🚪</button>
+                </div>
+            </div>
+        </aside>
+        <main class="main" id="mainArea"><p>Yükleniyor...</p></main>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    var CONFIG = {
+        SESSION_KEY: 'visio360_user',
+        SUPABASE_URL_KEY: 'visio360_supabase_url',
+        SUPABASE_KEY_KEY: 'visio360_supabase_key'
+    };
+    var db = null, currentUser = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var session = localStorage.getItem(CONFIG.SESSION_KEY);
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        currentUser = JSON.parse(session);
+        if (currentUser.role !== 'org_admin') { window.location.href = 'index.html'; return; }
+        
+        document.getElementById('nameEl').textContent = currentUser.username;
+        document.getElementById('avatarEl').textContent = currentUser.username.charAt(0);
+        document.getElementById('orgEl').textContent = currentUser.org_name || 'Kurum Yöneticisi';
+        
+        var url = localStorage.getItem(CONFIG.SUPABASE_URL_KEY);
+        var key = localStorage.getItem(CONFIG.SUPABASE_KEY_KEY);
+        if (url && key) db = window.supabase.createClient(url, key);
+        
+        document.querySelectorAll('.menu-item').forEach(function(el) {
+            el.addEventListener('click', function() {
+                var page = this.getAttribute('data-page');
+                showPage(page);
+            });
+        });
+        
+        showPage('dashboard');
+    });
+    
+    function showPage(page) {
+        document.querySelectorAll('.menu-item').forEach(function(el) {
+            el.classList.remove('active');
+            if (el.getAttribute('data-page') === page) el.classList.add('active');
+        });
+        
+        var html = '';
+        switch(page) {
+            case 'dashboard': html = pageDashboard(); break;
+            case 'users': html = pageUsers(); break;
+            case 'evaluations': html = pageEvaluations(); break;
+            case 'reports': html = pageReports(); break;
+        }
+        document.getElementById('mainArea').innerHTML = html;
+    }
+    
+    function pageDashboard() {
+        var html = '<h2 class="page-title">📊 Dashboard</h2><p class="page-desc">' + (currentUser.org_name || 'Kurum') + ' değerlendirme özeti</p>';
+        html += '<div class="stats">';
+        html += '<div class="stat-card"><div class="stat-value" id="statUsers">-</div><div class="stat-label">Personel</div></div>';
+        html += '<div class="stat-card"><div class="stat-value" id="statPending">-</div><div class="stat-label">Bekleyen</div></div>';
+        html += '<div class="stat-card"><div class="stat-value" id="statComplete">-</div><div class="stat-label">Tamamlanan</div></div>';
+        html += '</div>';
+        html += '<div class="card"><div class="card-header"><h3>Hızlı İşlemler</h3></div><div class="card-body">';
+        html += '<p>Sol menüden işlem seçin.</p></div></div>';
+        setTimeout(loadDashboardStats, 100);
+        return html;
+    }
+    
+    async function loadDashboardStats() {
+        if (!db || !currentUser.org_id) return;
+        try {
+            var { count: userCount } = await db.from('users').select('*', { count: 'exact', head: true }).eq('organization_id', currentUser.org_id);
+            document.getElementById('statUsers').textContent = userCount || 0;
+        } catch(e) { console.log(e); }
+    }
+    
+    function pageUsers() {
+        var html = '<h2 class="page-title">👥 Personel Listesi</h2><p class="page-desc">Kurumunuzdaki personel</p>';
+        html += '<div class="card"><div class="card-body"><div id="usersList">Yükleniyor...</div></div></div>';
+        setTimeout(loadUsers, 100);
+        return html;
+    }
+    
+    async function loadUsers() {
+        var container = document.getElementById('usersList');
+        if (!db) { container.innerHTML = '<p>Supabase bağlantısı gerekli</p>'; return; }
+        
+        try {
+            var { data, error } = await db.from('users').select('*').eq('organization_id', currentUser.org_id);
+            if (error) throw error;
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>Personel bulunamadı</p>';
+                return;
+            }
+            
+            var html = '<table><thead><tr><th>Ad Soyad</th><th>Rol</th><th>Durum</th></tr></thead><tbody>';
+            data.forEach(function(u) {
+                var role = u.role === 'org_admin' ? 'Yönetici' : 'Personel';
+                html += '<tr><td>' + u.name + '</td><td>' + role + '</td><td><span class="badge green">Aktif</span></td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } catch(e) { container.innerHTML = '<p>Hata: ' + e.message + '</p>'; }
+    }
+    
+    function pageEvaluations() {
+        var html = '<h2 class="page-title">📋 Değerlendirmeler</h2><p class="page-desc">Dönem değerlendirme durumu</p>';
+        html += '<div class="card"><div class="card-body"><div id="evalList">Yükleniyor...</div></div></div>';
+        setTimeout(loadEvaluations, 100);
+        return html;
+    }
+    
+    async function loadEvaluations() {
+        var container = document.getElementById('evalList');
+        if (!db) { container.innerHTML = '<p>Supabase bağlantısı gerekli</p>'; return; }
+        
+        try {
+            var { data, error } = await db.from('evaluation_assignments')
+                .select('*, evaluator:users!evaluation_assignments_evaluator_id_fkey(name), evaluatee:users!evaluation_assignments_evaluatee_id_fkey(name), evaluation_periods(name)')
+                .eq('evaluatee.organization_id', currentUser.org_id)
+                .limit(50);
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>Henüz değerlendirme ataması yok</p>';
+                return;
+            }
+            
+            var html = '<table><thead><tr><th>Değerlendiren</th><th>Değerlendirilen</th><th>Dönem</th><th>Durum</th></tr></thead><tbody>';
+            data.forEach(function(a) {
+                var badge = a.status === 'completed' ? 'green' : 'orange';
+                var status = a.status === 'completed' ? 'Tamamlandı' : 'Bekliyor';
+                html += '<tr>';
+                html += '<td>' + (a.evaluator ? a.evaluator.name : '-') + '</td>';
+                html += '<td>' + (a.evaluatee ? a.evaluatee.name : '-') + '</td>';
+                html += '<td>' + (a.evaluation_periods ? a.evaluation_periods.name : '-') + '</td>';
+                html += '<td><span class="badge ' + badge + '">' + status + '</span></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } catch(e) { container.innerHTML = '<p>Hata: ' + e.message + '</p>'; }
+    }
+    
+    function pageReports() {
+        var html = '<h2 class="page-title">📈 Raporlar</h2><p class="page-desc">Değerlendirme sonuçları</p>';
+        html += '<div class="card"><div class="card-body"><div id="reportList">Yükleniyor...</div></div></div>';
+        setTimeout(loadReports, 100);
+        return html;
+    }
+    
+    async function loadReports() {
+        var container = document.getElementById('reportList');
+        if (!db) { container.innerHTML = '<p>Supabase bağlantısı gerekli</p>'; return; }
+        
+        try {
+            var { data } = await db.from('calculated_scores')
+                .select('*, users(name, organization_id)')
+                .eq('users.organization_id', currentUser.org_id);
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>Henüz sonuç yok</p>';
+                return;
+            }
+            
+            var html = '<table><thead><tr><th>Personel</th><th>REEL Puan</th><th>Standart Puan</th></tr></thead><tbody>';
+            data.forEach(function(r) {
+                html += '<tr><td>' + (r.users ? r.users.name : '-') + '</td>';
+                html += '<td>' + (r.reel_score ? r.reel_score.toFixed(2) : '-') + '</td>';
+                html += '<td>' + (r.standard_score ? r.standard_score.toFixed(2) : '-') + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } catch(e) { container.innerHTML = '<p>Hata: ' + e.message + '</p>'; }
+    }
+    
+    function toast(msg) {
+        var el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(function() { el.classList.remove('show'); }, 3000);
+    }
+    
+    function doLogout() {
+        localStorage.removeItem(CONFIG.SESSION_KEY);
+        window.location.href = 'index.html';
+    }
+    </script>
+</body>
+</html>

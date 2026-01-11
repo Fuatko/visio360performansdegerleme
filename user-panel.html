@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISIO 360° - Değerlendirme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #3b82f6; --primary-dark: #1d4ed8; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --bg: #0f172a;
+            --bg-card: #1e293b; --bg-hover: #334155; --text: #f1f5f9;
+            --text-light: #94a3b8; --border: #334155;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        .header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .header-logo { display: flex; align-items: center; gap: 12px; }
+        .header-logo span { font-size: 24px; }
+        .header-logo h1 { font-size: 20px; }
+        .header-user { display: flex; align-items: center; gap: 12px; }
+        .header-user span { color: var(--text-light); }
+        .btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-danger { background: var(--danger); color: white; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+        
+        .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .page-desc { color: var(--text-light); margin-bottom: 24px; }
+        
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+        .card-header h3 { font-size: 18px; }
+        .card-body { padding: 24px; }
+        
+        .pending-list { display: grid; gap: 16px; }
+        .pending-item { background: var(--bg-hover); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .pending-info h4 { margin-bottom: 4px; }
+        .pending-info p { color: var(--text-light); font-size: 14px; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        
+        .evaluation-form { display: none; }
+        .evaluation-form.active { display: block; }
+        
+        .evaluatee-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: center; }
+        .evaluatee-header h2 { font-size: 24px; margin-bottom: 8px; }
+        .evaluatee-header p { opacity: 0.9; }
+        
+        .category { margin-bottom: 32px; }
+        .category-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); }
+        
+        .question { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .question-text { font-size: 15px; margin-bottom: 16px; line-height: 1.6; }
+        .question-num { color: var(--primary); font-weight: 600; }
+        
+        .options { display: grid; gap: 8px; }
+        .option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-hover); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .option:hover { background: var(--border); }
+        .option.selected { background: rgba(59, 130, 246, 0.2); border: 1px solid var(--primary); }
+        .option input { display: none; }
+        .option-radio { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .option.selected .option-radio { border-color: var(--primary); background: var(--primary); }
+        .option.selected .option-radio::after { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; }
+        .option-text { flex: 1; font-size: 14px; }
+        .option-score { font-size: 12px; color: var(--text-light); }
+        
+        .form-footer { position: sticky; bottom: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .progress-text { color: var(--text-light); }
+        .btn-success { background: var(--success); color: white; }
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--success); padding: 14px 20px; border-radius: 12px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 1000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-color: var(--danger); }
+        
+        .empty-state { text-align: center; padding: 60px; }
+        .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+        .empty-state h3 { margin-bottom: 8px; }
+        .empty-state p { color: var(--text-light); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-logo">
+            <span>📊</span>
+            <h1>VISIO 360°</h1>
+        </div>
+        <div class="header-user">
+            <span id="userName">-</span>
+            <button class="btn btn-danger" onclick="doLogout()">Çıkış</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Bekleyen Değerlendirmeler -->
+        <div id="pendingSection">
+            <h2 class="page-title">📋 Değerlendirmelerim</h2>
+            <p class="page-desc">Tamamlamanız gereken değerlendirmeler</p>
+            <div id="pendingList">Yükleniyor...</div>
+        </div>
+        
+        <!-- Değerlendirme Formu -->
+        <div id="evaluationForm" class="evaluation-form">
+            <div class="evaluatee-header">
+                <h2 id="evaluateeName">-</h2>
+                <p>için değerlendirme formu</p>
+            </div>
+            
+            <div id="questionsContainer"></div>
+            
+            <div class="form-footer">
+                <span class="progress-text"><span id="answered">0</span> / <span id="total">39</span> soru cevaplandı</span>
+                <div>
+                    <button class="btn btn-danger" onclick="cancelEvaluation()" style="margin-right:12px">İptal</button>
+                    <button class="btn btn-success" onclick="submitEvaluation()">✅ Gönder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    var CONFIG = {
+        SESSION_KEY: 'visio360_user',
+        SUPABASE_URL_KEY: 'visio360_supabase_url',
+        SUPABASE_KEY_KEY: 'visio360_supabase_key'
+    };
+    
+    var db = null, currentUser = null;
+    var currentAssignment = null;
+    var questions = [];
+    var answers = {};
+    
+    // REEL Kategorileri ve Sorular
+    var CATEGORIES = [
+        { code: 'PIEE', name: 'Proaktiflik, İnisiyatif, Enerji, Etkinlik', questions: [
+            'Görevlerini zamanında ve eksiksiz tamamlar.',
+            'Yeni fikirler üretir ve uygular.',
+            'Sorunları çözmek için inisiyatif alır.',
+            'Yüksek enerji ve motivasyonla çalışır.',
+            'Hedeflerine ulaşmak için kararlılık gösterir.'
+        ]},
+        { code: 'OI', name: 'Organizasyon ve İşbirliği', questions: [
+            'Ekip çalışmasına katkıda bulunur.',
+            'İş süreçlerini etkin organize eder.',
+            'Diğer birimlerle uyumlu çalışır.',
+            'Kaynakları verimli kullanır.'
+        ]},
+        { code: 'EZC', name: 'Etkili Zaman ve Çatışma Yönetimi', questions: [
+            'Zamanını etkili kullanır.',
+            'Öncelikleri doğru belirler.',
+            'Çatışmaları yapıcı şekilde çözer.',
+            'Stres altında sakin kalır.'
+        ]},
+        { code: 'EOL', name: 'Etkili ve Olumlu Liderlik', questions: [
+            'Ekibine ilham verir.',
+            'Adil ve tutarlı davranır.',
+            'Geri bildirim verir ve alır.',
+            'Başkalarını geliştirir.'
+        ]},
+        { code: 'EDI', name: 'Etkili ve Doğru İletişim', questions: [
+            'Düşüncelerini açık ifade eder.',
+            'Aktif dinleme yapar.',
+            'Yazılı iletişimde etkilidir.'
+        ]},
+        { code: 'KGPB', name: 'Kurumsal Gelişime Pozitif Bakış', questions: [
+            'Kurumsal değerlere bağlıdır.',
+            'Değişime açıktır.',
+            'Kurumun başarısı için çalışır.',
+            'Olumlu tutum sergiler.'
+        ]},
+        { code: 'EAED', name: 'Eğitim ve Araştırma Etkinliği', questions: [
+            'Sürekli öğrenmeye açıktır.',
+            'Bilgisini paylaşır.',
+            'Yeni teknolojileri takip eder.',
+            'Araştırma ve analiz yapar.'
+        ]},
+        { code: 'SYBD', name: 'Stratejik Yönetsel Beceriler', questions: [
+            'Stratejik düşünür.',
+            'Karar alma süreçlerinde etkilidir.',
+            'Riskleri yönetir.',
+            'Uzun vadeli planlar yapar.'
+        ]},
+        { code: 'MSUY', name: 'Mesleki Saygınlık ve Uzmanlık', questions: [
+            'Alanında uzmandır.',
+            'Mesleki etik kurallara uyar.',
+            'Güvenilirdir.',
+            'Kaliteli iş üretir.'
+        ]},
+        { code: 'KGMO', name: 'Kurumsal Gelişim Motivasyonu', questions: [
+            'Kurumsal hedeflere katkı sağlar.',
+            'Yenilikçi projeler önerir.',
+            'Sürekli iyileştirme arar.'
+        ]}
+    ];
+    
+    // Cevap seçenekleri (REEL puanlama)
+    var OPTIONS = [
+        { text: 'Çok düşük düzeyde, neredeyse hiç gözlemlenmedi', reel: 1, std: 1 },
+        { text: 'Düşük düzeyde, nadiren gözlemlendi', reel: 2, std: 2 },
+        { text: 'Ortalamanın altında, bazen gözlemlendi', reel: 3, std: 3 },
+        { text: 'Orta düzeyde, genellikle gözlemlendi', reel: 4, std: 4 },
+        { text: 'Ortalamanın üstünde, sıklıkla gözlemlendi', reel: 5, std: 5 },
+        { text: 'Yüksek düzeyde, çoğu zaman gözlemlendi', reel: 6, std: 6 },
+        { text: 'Çok yüksek düzeyde, her zaman gözlemlendi', reel: 7, std: 7 },
+        { text: 'Değerlendirme yapamıyorum', reel: 0, std: 0 }
+    ];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var session = localStorage.getItem(CONFIG.SESSION_KEY);
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        currentUser = JSON.parse(session);
+        document.getElementById('userName').textContent = currentUser.username;
+        
+        var url = localStorage.getItem(CONFIG.SUPABASE_URL_KEY);
+        var key = localStorage.getItem(CONFIG.SUPABASE_KEY_KEY);
+        if (url && key) db = window.supabase.createClient(url, key);
+        
+        // Soruları hazırla
+        var qNum = 1;
+        CATEGORIES.forEach(function(cat) {
+            cat.questions.forEach(function(q) {
+                questions.push({ num: qNum++, category: cat.code, categoryName: cat.name, text: q });
+            });
+        });
+        
+        loadPendingEvaluations();
+    });
+    
+    async function loadPendingEvaluations() {
+        var container = document.getElementById('pendingList');
+        
+        if (!db) {
+            container.innerHTML = '<div class="card"><div class="card-body"><p>Supabase bağlantısı gerekli</p></div></div>';
+            return;
+        }
+        
+        try {
+            var { data, error } = await db.from('evaluation_assignments')
+                .select('*, evaluatee:users!evaluation_assignments_evaluatee_id_fkey(name), evaluation_periods(name)')
+                .eq('evaluator_id', currentUser.id)
+                .eq('status', 'pending');
+            
+            if (error) throw error;
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">✅</div><h3>Harika!</h3><p>Bekleyen değerlendirmeniz bulunmuyor.</p></div>';
+                return;
+            }
+            
+            var html = '<div class="pending-list">';
+            data.forEach(function(a) {
+                html += '<div class="pending-item">';
+                html += '<div class="pending-info"><h4>' + (a.evaluatee ? a.evaluatee.name : 'Bilinmiyor') + '</h4>';
+                html += '<p>' + (a.evaluation_periods ? a.evaluation_periods.name : '-') + '</p></div>';
+                html += '<button class="btn btn-primary" onclick="startEvaluation(\'' + a.id + '\', \'' + (a.evaluatee ? a.evaluatee.name : '') + '\')">Değerlendir</button>';
+                html += '</div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            
+        } catch(e) {
+            container.innerHTML = '<div class="card"><div class="card-body"><p style="color:#ef4444">Hata: ' + e.message + '</p></div></div>';
+        }
+    }
+    
+    function startEvaluation(assignmentId, evaluateeName) {
+        currentAssignment = assignmentId;
+        answers = {};
+        
+        document.getElementById('evaluateeName').textContent = evaluateeName;
+        document.getElementById('pendingSection').style.display = 'none';
+        document.getElementById('evaluationForm').classList.add('active');
+        
+        renderQuestions();
+        updateProgress();
+    }
+    
+    function renderQuestions() {
+        var container = document.getElementById('questionsContainer');
+        var html = '';
+        var currentCat = '';
+        
+        questions.forEach(function(q) {
+            if (q.categoryName !== currentCat) {
+                if (currentCat) html += '</div>';
+                html += '<div class="category"><div class="category-title">' + q.categoryName + '</div>';
+                currentCat = q.categoryName;
+            }
+            
+            html += '<div class="question" id="q' + q.num + '">';
+            html += '<div class="question-text"><span class="question-num">S' + q.num + '.</span> ' + q.text + '</div>';
+            html += '<div class="options">';
+            
+            OPTIONS.forEach(function(opt, i) {
+                html += '<label class="option" onclick="selectOption(' + q.num + ', ' + i + ')">';
+                html += '<input type="radio" name="q' + q.num + '" value="' + i + '">';
+                html += '<span class="option-radio"></span>';
+                html += '<span class="option-text">' + opt.text + '</span>';
+                if (opt.reel > 0) html += '<span class="option-score">' + opt.reel + ' puan</span>';
+                html += '</label>';
+            });
+            
+            html += '</div></div>';
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+    }
+    
+    function selectOption(qNum, optIndex) {
+        answers[qNum] = optIndex;
+        
+        // UI güncelle
+        var options = document.querySelectorAll('#q' + qNum + ' .option');
+        options.forEach(function(o, i) {
+            o.classList.remove('selected');
+            if (i === optIndex) o.classList.add('selected');
+        });
+        
+        updateProgress();
+    }
+    
+    function updateProgress() {
+        var answered = Object.keys(answers).length;
+        document.getElementById('answered').textContent = answered;
+        document.getElementById('total').textContent = questions.length;
+    }
+    
+    function cancelEvaluation() {
+        if (confirm('Değerlendirmeyi iptal etmek istiyor musunuz? Girdiğiniz cevaplar kaybolacak.')) {
+            currentAssignment = null;
+            answers = {};
+            document.getElementById('pendingSection').style.display = 'block';
+            document.getElementById('evaluationForm').classList.remove('active');
+        }
+    }
+    
+    async function submitEvaluation() {
+        var answered = Object.keys(answers).length;
+        
+        if (answered < questions.length) {
+            if (!confirm('Henüz ' + (questions.length - answered) + ' soru cevaplanmadı. Yine de göndermek istiyor musunuz?')) {
+                return;
+            }
+        }
+        
+        if (!db || !currentAssignment) {
+            toast('Hata: Bağlantı sorunu', true);
+            return;
+        }
+        
+        try {
+            // Cevapları kaydet
+            var responses = [];
+            questions.forEach(function(q) {
+                var optIndex = answers[q.num];
+                if (optIndex !== undefined) {
+                    var opt = OPTIONS[optIndex];
+                    responses.push({
+                        assignment_id: currentAssignment,
+                        question_id: q.num,
+                        category_code: q.category,
+                        selected_option: optIndex,
+                        reel_score: opt.reel,
+                        standard_score: opt.std
+                    });
+                }
+            });
+            
+            // evaluation_responses tablosuna kaydet
+            if (responses.length > 0) {
+                var { error: respError } = await db.from('evaluation_responses').insert(responses);
+                if (respError) console.log('Responses insert error:', respError);
+            }
+            
+            // Assignment durumunu güncelle
+            var { error: assignError } = await db.from('evaluation_assignments')
+                .update({ status: 'completed', completed_at: new Date().toISOString() })
+                .eq('id', currentAssignment);
+            
+            if (assignError) throw assignError;
+            
+            toast('✅ Değerlendirme başarıyla gönderildi!');
+            
+            // Formu kapat
+            currentAssignment = null;
+            answers = {};
+            document.getElementById('pendingSection').style.display = 'block';
+            document.getElementById('evaluationForm').classList.remove('active');
+            
+            // Listeyi yenile
+            loadPendingEvaluations();
+            
+        } catch(e) {
+            toast('Hata: ' + e.message, true);
+        }
+    }
+    
+    function toast(msg, isError) {
+        var el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast show' + (isError ? ' error' : '');
+        setTimeout(function() { el.className = 'toast'; }, 3000);
+    }
+    
+    function doLogout() {
+        localStorage.removeItem(CONFIG.SESSION_KEY);
+        window.location.href = 'index.html';
+    }
+    </script>
+</body>
+</html>
